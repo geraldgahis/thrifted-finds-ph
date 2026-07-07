@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\CustomerProfile;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -17,9 +18,21 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        User::factory()->create([
-            'name' => 'Test User',
+        // 1. Create your Admin Account
+        User::create([
+            'first_name' => 'Admin',
+            'last_name' => 'Account',
             'email' => 'test@example.com',
+            'password' => bcrypt('password'), // Or use Hash::make('password')
+            'role' => 'admin',
         ]);
+
+        // 2. Create 10 dummy customers
+        User::factory(10)->create()->each(function ($user) {
+            // Automatically create a blank profile for each dummy customer
+            CustomerProfile::create([
+                'user_id' => $user->id,
+            ]);
+        });
     }
 }
