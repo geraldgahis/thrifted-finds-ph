@@ -3,13 +3,13 @@
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Product;
+use Livewire\Attributes\Layout;
 
-new class extends Component {
+new #[Layout('components.layouts.admin')] class extends Component {
     use WithPagination;
 
     public string $search = '';
 
-    // Reset pagination when searching
     public function updatingSearch()
     {
         $this->resetPage();
@@ -17,10 +17,15 @@ new class extends Component {
 
     public function render()
     {
-        // Fetch products with their category and primary image (prevents N+1 database queries)
-        $products = Product::with(['category', 'primaryImage'])
+        // Added 'brand' to the eager loading array
+        $products = Product::with(['category', 'brand', 'primaryImage'])
             ->when($this->search, function ($query) {
-                $query->where('title', 'ilike', '%' . $this->search . '%')->orWhere('brand', 'ilike', '%' . $this->search . '%');
+                $query
+                    ->where('title', 'ilike', '%' . $this->search . '%')
+                    // Replaced the simple orWhere with a relational search
+                    ->orWhereHas('brand', function ($q) {
+                        $q->where('name', 'ilike', '%' . $this->search . '%');
+                    });
             })
             ->latest()
             ->paginate(10);
@@ -121,49 +126,40 @@ new class extends Component {
                                     </div>
                                     <div class="ml-4">
                                         <div
-                                            class="text-[14px] font-medium text-[#1d1d1f] truncate max-w-50 sm:max-w-75">
+                                            class="text-[14px] font-medium text-[#1d1d1f] truncate max-w-[200px] sm:max-w-[300px]">
                                             {{ $product->title }}
                                         </div>
                                         <div class="text-[12px] text-[#6e6e73]">
-                                            {{ $product->brand ?? 'Unbranded' }} • Size {{ $product->size_tag }}
+                                            {{-- Fixed the brand output here --}}
+                                            {{ $product->brand->name ?? 'Unbranded' }} • Size {{ $product->size_tag }}
                                         </div>
                                     </div>
                                 </td>
 
-                                <!-- Category -->
                                 <td class="py-4 px-6 text-[14px] text-[#6e6e73]">
                                     {{ $product->category->name ?? 'None' }}
                                 </td>
 
-                                <!-- Price -->
                                 <td class="py-4 px-6 text-[14px] font-medium text-[#1d1d1f]">
                                     ₱{{ number_format($product->price, 2) }}
                                 </td>
 
-                                <!-- Status Badge -->
                                 <td class="py-4 px-6">
                                     @if ($product->status === 'available')
                                         <span
-                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#e8f5e9] text-[#1b5e20]">
-                                            Available
-                                        </span>
+                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#e8f5e9] text-[#1b5e20]">Available</span>
                                     @elseif($product->status === 'reserved')
                                         <span
-                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#fff8e1] text-[#f57f17]">
-                                            In Cart
-                                        </span>
+                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#fff8e1] text-[#f57f17]">In
+                                            Cart</span>
                                     @else
                                         <span
-                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#f5f5f7] text-[#6e6e73]">
-                                            Sold
-                                        </span>
+                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#f5f5f7] text-[#6e6e73]">Sold</span>
                                     @endif
                                 </td>
 
-                                <!-- Actions -->
                                 <td class="py-4 px-6 text-right font-medium">
                                     <a href="#" class="text-[13px] text-[#0071e3] hover:underline mr-3">Edit</a>
-                                    <!-- We will wire up delete functionality later -->
                                     <button class="text-[13px] text-red-500 hover:underline">Drop</button>
                                 </td>
                             </tr>

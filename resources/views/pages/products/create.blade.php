@@ -4,17 +4,19 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Brand;
 use Illuminate\Support\Str;
+use Livewire\Attributes\Layout;
 
-new class extends Component {
+new #[Layout('components.layouts.admin')] class extends Component {
     use WithFileUploads;
 
     // Form fields
     public $category_id = '';
+    public $brand_id = '';
     public string $title = '';
     public string $slug = '';
     public string $description = '';
-    public string $brand = '';
     public string $size_tag = '';
     public string $measurements = '';
     public string $condition = '';
@@ -34,10 +36,10 @@ new class extends Component {
     {
         $this->validate([
             'category_id' => 'required|exists:categories,id',
+            'brand_id' => 'nullable|exists:brands,id',
             'title' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:products,slug',
             'description' => 'nullable|string',
-            'brand' => 'nullable|string|max:255',
             'size_tag' => 'nullable|string|max:50',
             'measurements' => 'nullable|string|max:255',
             'condition' => 'nullable|string|max:255',
@@ -49,10 +51,10 @@ new class extends Component {
         // 1. Create the Product
         $product = Product::create([
             'category_id' => $this->category_id,
+            'brand_id' => $this->brand_id,
             'title' => $this->title,
             'slug' => $this->slug,
             'description' => $this->description,
-            'brand' => $this->brand,
             'size_tag' => $this->size_tag,
             'measurements' => $this->measurements,
             'condition' => $this->condition,
@@ -82,6 +84,7 @@ new class extends Component {
     {
         return view('pages.products.create', [
             'categories' => Category::orderBy('name')->get(),
+            'brands' => Brand::orderBy('name')->get(),
         ])->title('Add Product - Admin');
     }
 };
@@ -128,8 +131,16 @@ new class extends Component {
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-[12px] font-medium text-[#6e6e73] mb-1">Brand</label>
-                                    <input wire:model="brand" type="text" placeholder="e.g., Nike, Unbranded"
+                                    <select wire:model="brand_id" required
                                         class="w-full px-3 py-2.5 border border-[#d2d2d7] rounded-xl text-[14px] bg-[#f5f5f7] focus:outline-none focus:border-[#0071e3] focus:bg-white transition-colors">
+                                        <option value="">No Brand / Unbranded</option>
+                                        @foreach ($brands as $brand)
+                                            <option value="{{ $brand->id }}">{{ $brand->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('brand_id')
+                                        <span class="text-red-600 text-[12px] mt-1 block">{{ $message }}</span>
+                                    @enderror
                                 </div>
                                 <div>
                                     <label class="block text-[12px] font-medium text-[#6e6e73] mb-1">Category</label>

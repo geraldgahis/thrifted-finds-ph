@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 #[Fillable([
         'category_id', 'title', 'slug', 'description', 
-        'brand', 'size_tag', 'measurements', 'condition', 
+        'brand_id', 'size_tag', 'measurements', 'condition', 
         'price', 'status'
     ])]
 class Product extends Model
@@ -28,5 +28,10 @@ class Product extends Model
     public function primaryImage()
     {
         return $this->hasOne(ProductImage::class)->where('is_primary', true);
+    }
+
+    public function brand()
+    {
+        return $this->belongsTo(Brand::class);
     }
 }

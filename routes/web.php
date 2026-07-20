@@ -15,3 +15,5 @@ Route::livewire('/admin/categories', 'pages::categories.index')->name('categorie
 
 Route::livewire('/admin/products', 'pages::products.index')->name('products.index');
 Route::livewire('/admin/products/create', 'pages::products.create')->name('products.create');
+
+Route::livewire('/admin/dashboard', 'pages::admin.dashboard')->name('admin.dashboard');

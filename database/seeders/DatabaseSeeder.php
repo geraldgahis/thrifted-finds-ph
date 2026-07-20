@@ -34,5 +34,11 @@ class DatabaseSeeder extends Seeder
                 'user_id' => $user->id,
             ]);
         });
+
+        // 2. Run the Categories and Brands Seeder FIRST
+        $this->call(CategoriesAndBrandsSeeder::class);
+
+        // 3. Run the Product Seeder SECOND
+        $this->call(ProductSeeder::class);
     }
 }
